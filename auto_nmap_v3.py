@@ -453,6 +453,35 @@ def create_parser() -> argparse.ArgumentParser:
 
     epilog = f"""
 ================================================================================
+HOW IT WORKS
+================================================================================
+
+FULL SCAN WORKFLOW (--full):
+  When you run a full scan, Auto Nmap executes 4 phases automatically:
+
+  Phase 1: HOST DISCOVERY    - Ping sweep (-sn) to find alive hosts
+  Phase 2: PORT SCANNING     - SYN scan (-sS) on alive hosts for open ports
+  Phase 3: VERSION DETECTION - Service fingerprinting (-sV) on open ports
+  Phase 4: NSE SCRIPTS       - Runs 200+ scripts based on discovered services
+
+NSE SCRIPT CATEGORIES:
+  safe       - Non-intrusive info gathering (banners, certs, headers)
+  discovery  - Service and OS identification
+  enum       - Resource enumeration (users, shares, databases)
+  vuln       - Known vulnerabilities (Heartbleed, EternalBlue, Shellshock)
+  auth       - Authentication issues (anonymous access, empty passwords)
+  brute      - Password attacks (SSH, FTP, SMB, MySQL brute force)
+  intrusive  - Aggressive tests (may crash or modify services)
+
+OUTPUT FILES GENERATED:
+  security_report_*.html  - Styled HTML with severity cards, expandable findings
+  scan_report_*.txt       - Plain text summary with disclaimers
+  scan_report_*.json      - Machine-readable for SIEM/automation
+  findings_*.csv          - Security findings for ticketing systems
+  hosts_ports_*.csv       - All discovered hosts and open ports
+  summary_*.csv           - Summary metrics for reporting
+
+================================================================================
 SPEED PRESETS (--speed)
 ================================================================================
 
@@ -485,12 +514,45 @@ SPEED CONTROL:
   # Slow scan for legacy/fragile networks
   sudo python3 {sys.argv[0]} -t 10.0.0.0/24 --full --speed slow
 
+VULNERABILITY SCANNING:
+  # Run only vulnerability-related NSE scripts
+  sudo python3 {sys.argv[0]} -t 192.168.1.1 --port-scan --nse --vuln-only
+
+  # Check for EternalBlue (MS17-010)
+  sudo python3 {sys.argv[0]} -t 192.168.1.0/24 -p 445 --nse --vuln-only
+
 NSE SCRIPTING:
   # Run NSE scripts on discovered services
   sudo python3 {sys.argv[0]} -t 192.168.1.1 --port-scan --nse
 
   # Include brute force scripts
   sudo python3 {sys.argv[0]} -t 192.168.1.1 --nse --brute --threads 10
+
+  # Safe scripts only (non-disruptive)
+  sudo python3 {sys.argv[0]} -t 192.168.1.1 --full --safe-only
+
+SERVICE-SPECIFIC SCANS:
+  # Web server scanning
+  sudo python3 {sys.argv[0]} -t 192.168.1.1 -p 80,443,8080 --nse
+
+  # SMB/Windows scanning
+  sudo python3 {sys.argv[0]} -t 192.168.1.1 -p 139,445 --nse
+
+  # Database scanning
+  sudo python3 {sys.argv[0]} -t 192.168.1.1 -p 1433,3306,5432,27017 --nse
+
+REAL-WORLD SCENARIOS:
+  # Penetration test - initial recon
+  sudo python3 {sys.argv[0]} -t 10.0.0.0/24 --ping-sweep --speed fast
+
+  # Internal vulnerability assessment
+  sudo python3 {sys.argv[0]} -t 192.168.1.0/24 --full --vuln-only --speed fast
+
+  # CTF/HackTheBox machine scan
+  sudo python3 {sys.argv[0]} -t 10.10.10.5 --full --speed aggressive --brute
+
+  # Security audit with full documentation
+  sudo python3 {sys.argv[0]} -t 192.168.1.0/24 --full -o ./audit --report-formats txt,json,csv,html
 
 ================================================================================
 PROJECT FILES
@@ -503,6 +565,20 @@ PROJECT FILES
   remediations.py   45+ remediation recommendations with severity ratings
   reporter.py       Report generation (TXT, JSON, CSV, HTML)
   utils.py          Utility functions: logging, parsing, file I/O
+
+================================================================================
+SUPPORTED SERVICES (27+)
+================================================================================
+
+  FTP (21)          SSH (22)          Telnet (23)       SMTP (25,465,587)
+  DNS (53)          HTTP (80,8080)    HTTPS (443,8443)  SMB (139,445)
+  SNMP (161)        LDAP (389,636)    MS-SQL (1433)     MySQL (3306)
+  PostgreSQL (5432) Oracle (1521)     RDP (3389)        VNC (5900-5902)
+  Redis (6379)      MongoDB (27017)   Elasticsearch     Docker (2375,2376)
+  Kubernetes        NFS (2049)        Memcached         CouchDB (5984)
+  WinRM (5985)      Kerberos (88)     MQTT (1883,8883)
+
+Run --list-services to see all configured scripts for each service.
 
 ================================================================================
 """

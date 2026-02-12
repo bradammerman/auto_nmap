@@ -13,6 +13,107 @@ A powerful Python 3 network scanner that automatically discovers hosts, scans po
 - **Remediation Guidance**: 45+ remediation recommendations with severity ratings
 - **Kali Linux Support**: Automatic handling of externally-managed-environment errors
 
+## How It Works
+
+### Full Scan Workflow (`--full`)
+
+When you run a full scan, Auto Nmap executes 4 phases automatically:
+
+| Phase | Description | Nmap Flags |
+|-------|-------------|------------|
+| **1. Host Discovery** | Ping sweep to find alive hosts | `-sn` |
+| **2. Port Scanning** | SYN scan on alive hosts for open ports | `-sS` |
+| **3. Version Detection** | Service fingerprinting on open ports | `-sV` |
+| **4. NSE Scripts** | Runs appropriate scripts based on discovered services | `--script` |
+
+### What Each NSE Category Does
+
+| Category | What It Scans For | Example Scripts |
+|----------|-------------------|-----------------|
+| **Safe** | Non-intrusive info gathering | Banners, SSL certs, HTTP headers |
+| **Discovery** | Service and OS identification | Version detection, OS fingerprinting |
+| **Enum** | Resource enumeration | Users, shares, databases, directories |
+| **Vuln** | Known vulnerabilities | Heartbleed, EternalBlue, Shellshock, BlueKeep |
+| **Auth** | Authentication issues | Anonymous access, empty passwords, weak auth |
+| **Brute** | Password attacks | SSH, FTP, SMB, MySQL, RDP brute force |
+| **Intrusive** | Aggressive tests | May crash or modify services |
+
+### All Command-Line Options
+
+#### Target Specification
+| Flag | Description |
+|------|-------------|
+| `-t, --targets` | Target: IP, CIDR, range, hostname, or file path |
+| `-iL, --input-list` | Read targets from file (one per line) |
+| `--exclude` | Exclude specific hosts/networks |
+| `--exclude-file` | Exclude hosts listed in a file |
+
+#### Scan Types
+| Flag | Description |
+|------|-------------|
+| `--full` | Complete scan: discovery → ports → version → NSE (RECOMMENDED) |
+| `--ping-sweep` | Host discovery only (no port scan) |
+| `--port-scan` | TCP/UDP port scan |
+| `--version-scan` | Service version detection |
+| `--nse` | Run NSE scripts based on open ports |
+
+#### Port Specification
+| Flag | Description |
+|------|-------------|
+| `-p, --ports` | Specific TCP ports (e.g., `22,80,443` or `1-1024`) |
+| `--udp-ports` | Specific UDP ports |
+| `--all-tcp` | Scan all 65,535 TCP ports |
+| `--top-ports N` | Scan top N most common ports |
+
+#### Speed Control
+| Flag | Description |
+|------|-------------|
+| `--speed` | Preset: `paranoid`, `sneaky`, `slow`, `normal`, `fast`, `aggressive`, `insane` |
+| `--min-hostgroup` | Minimum hosts to scan in parallel |
+| `--min-rate` | Minimum packets per second |
+| `--max-rate` | Maximum packets per second |
+| `--max-retries` | Max probe retries |
+| `--host-timeout` | Give up on host after this time (e.g., `30m`) |
+
+#### NSE Script Options
+| Flag | Description |
+|------|-------------|
+| `--brute` | Include brute force scripts |
+| `--intrusive` | Include intrusive scripts (may crash services) |
+| `--vuln-only` | Only vulnerability detection scripts |
+| `--safe-only` | Only non-disruptive scripts |
+| `--threads N` | Parallel NSE threads (default: 5) |
+| `--scripts` | Custom NSE scripts (comma-separated) |
+
+#### Output Options
+| Flag | Description |
+|------|-------------|
+| `-o, --output-dir` | Output directory (default: `output`) |
+| `--report-formats` | Report formats: `txt,json,csv,html` (default: all) |
+| `--no-report` | Skip report generation |
+| `-v, --verbose` | Verbose output |
+| `--debug` | Very verbose debugging |
+
+#### Utility Options
+| Flag | Description |
+|------|-------------|
+| `-i, --interactive` | Guided menu mode |
+| `--list-services` | Show all configured services and scripts |
+| `--list-scripts PORT` | Show scripts for a specific port |
+| `--list-speeds` | Show speed preset details |
+| `--version` | Show version number |
+
+### Output Files Generated
+
+| File | Description |
+|------|-------------|
+| `security_report_*.html` | Styled HTML report with severity cards, expandable findings |
+| `scan_report_*.txt` | Plain text summary with disclaimers |
+| `scan_report_*.json` | Machine-readable JSON for SIEM/automation |
+| `findings_*.csv` | Security findings for ticketing systems |
+| `hosts_ports_*.csv` | All discovered hosts and open ports |
+| `summary_*.csv` | Summary metrics for reporting |
+
 ## Quick Start
 
 ```bash
@@ -60,7 +161,7 @@ pip3 install --break-system-packages python-nmap
 ### Using Setup Script (Recommended for Kali)
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/auto_nmap.git
+git clone https://github.com/bradammerman/auto_nmap.git
 cd auto_nmap
 
 # Run setup (creates virtual environment)
